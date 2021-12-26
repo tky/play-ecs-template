@@ -292,5 +292,44 @@ export class NetworkStack extends Stack {
     this.sgEgress.connections.allowFrom(new ec2.Connections({
       securityGroups: [this.sgBackendContainer],
     }), ec2.Port.tcp(587), "backend containers(app) to egress(vpc endpoint, sending email via SES)");
+
+    vpc.addInterfaceEndpoint("ecr-endpoint", {
+      service: ec2.InterfaceVpcEndpointAwsService.ECR,
+      securityGroups: [this.sgEgress],
+      subnets: {
+        subnets: this.privateEgressSubnets
+      }
+    });
+
+    vpc.addInterfaceEndpoint("ecr-dkr-endpoint", {
+      service: ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER,
+      securityGroups: [this.sgEgress],
+      subnets: {
+        subnets: this.privateEgressSubnets
+      }
+    });
+
+    vpc.addInterfaceEndpoint("secret-manager-endpoint", {
+      service: ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
+      securityGroups: [this.sgEgress],
+      subnets: {
+        subnets: this.privateEgressSubnets
+      }
+    });
+
+    vpc.addInterfaceEndpoint("logs-endpoint", {
+      service: ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
+      securityGroups: [this.sgEgress],
+      subnets: {
+        subnets: this.privateEgressSubnets
+      }
+    });
+
+    new ec2.CfnVPCEndpoint(this, 'application-s3-endpoint', {
+      serviceName: 'com.amazonaws.'.concat(props.env!.region || "ap-northeast-1").concat('.s3'),
+      vpcId: this.vpc.vpcId,
+      routeTableIds: [egressRouteTable.ref],
+      vpcEndpointType: 'Gateway',
+    });
   }
 }
