@@ -20,6 +20,14 @@ export class NetworkStack extends Stack {
   public readonly privateEgressSubnets: ec2.ISubnet[];
   public readonly publicManageSubnets: ec2.ISubnet[];
 
+  public readonly sgPublicIngress: ec2.SecurityGroup;
+  public readonly sgManagement: ec2.SecurityGroup;
+  public readonly sgBackendContainer: ec2.SecurityGroup;
+  public readonly sgFrontContainer: ec2.SecurityGroup;
+  public readonly sgInternalLB: ec2.SecurityGroup;
+  public readonly sgDb: ec2.SecurityGroup;
+  public readonly sgEgress: ec2.SecurityGroup;
+
   constructor(scope: Construct, id: string, props: NetworkProps) {
     super(scope, id, props);
 
@@ -204,5 +212,85 @@ export class NetworkStack extends Stack {
       });
       return ec2.Subnet.fromSubnetId(this, subnet.name, sub.ref);
     });
+
+    this.sgPublicIngress = new ec2.SecurityGroup(this, 'sgPublicIngress', {
+      vpc,
+      securityGroupName: "public-ingress",
+      description: "Security group of ingress",
+      allowAllOutbound: true
+    });
+
+    this.sgManagement = new ec2.SecurityGroup(this, 'management', {
+      vpc,
+      securityGroupName: 'public-management',
+      description: "Security Group of public-management",
+      allowAllOutbound: true
+    });
+
+    this.sgBackendContainer = new ec2.SecurityGroup(this, 'container', {
+      vpc,
+      securityGroupName: 'private-container',
+      description: "Security Group of bakend applications running on containers",
+      allowAllOutbound: true
+    });
+
+    this.sgFrontContainer = new ec2.SecurityGroup(this, 'front-container', {
+      vpc,
+      securityGroupName: 'private-front-container',
+      description: "Security Group of front container app",
+      allowAllOutbound: true
+    });
+
+    this.sgInternalLB = new ec2.SecurityGroup(this, 'internal', {
+      vpc,
+      securityGroupName: 'private-internal',
+      description: "Security group for internal load balancer",
+      allowAllOutbound: true
+    });
+
+    this.sgDb = new ec2.SecurityGroup(this, 'sgDb', {
+      vpc,
+      description: "Security Group of database",
+      securityGroupName: "private-database",
+      allowAllOutbound: true
+    });
+
+    this.sgEgress = new ec2.SecurityGroup(this, 'sgEgress', {
+      vpc,
+      description: "Security Group of VPC Endpoint",
+      securityGroupName: "private-egress",
+      allowAllOutbound: true
+    });
+
+    this.sgPublicIngress.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80));
+    this.sgPublicIngress.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443));
+
+    this.sgFrontContainer.connections.allowFrom(new ec2.Connections({
+      securityGroups: [this.sgPublicIngress],
+    }), ec2.Port.tcp(80), "public load balancer to front containers(nginx)");
+
+    this.sgInternalLB.connections.allowFrom(new ec2.Connections({
+      securityGroups: [this.sgFrontContainer],
+    }), ec2.Port.tcp(80), "front containers(nginx) to internal load balancer");
+
+    this.sgBackendContainer.connections.allowFrom(new ec2.Connections({
+      securityGroups: [this.sgInternalLB],
+    }), ec2.Port.tcp(80), "internal load balancer to backend containers(app)");
+
+    this.sgDb.connections.allowFrom(new ec2.Connections({
+      securityGroups: [this.sgBackendContainer],
+    }), ec2.Port.tcp(5432), "backdnd containers(app) to database(postgres)");
+
+    this.sgDb.connections.allowFrom(new ec2.Connections({
+      securityGroups: [this.sgManagement],
+    }), ec2.Port.tcp(5432), "management to database(postgres)");
+
+    this.sgEgress.connections.allowFrom(new ec2.Connections({
+      securityGroups: [this.sgBackendContainer, this.sgFrontContainer],
+    }), ec2.Port.tcp(443), "backend containers(app) to egress(vpc endpoint)");
+
+    this.sgEgress.connections.allowFrom(new ec2.Connections({
+      securityGroups: [this.sgBackendContainer],
+    }), ec2.Port.tcp(587), "backend containers(app) to egress(vpc endpoint, sending email via SES)");
   }
 }
