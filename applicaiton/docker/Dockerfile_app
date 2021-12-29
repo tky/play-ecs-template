@@ -1,0 +1,12 @@
+FROM hseeberger/scala-sbt:11.0.13_1.5.5_2.13.6
+
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y nodejs \
+    npm   
+
+RUN mkdir -p /app
+WORKDIR /app/ui
+
+RUN npm install
+
+WORKDIR /app

@@ -1,0 +1,26 @@
+FROM hseeberger/scala-sbt:11.0.13_1.5.5_2.13.6 as BUILD
+
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y unzip \
+    curl \
+    gnupg
+
+RUN curl -sL https://deb.nodesource.com/setup_16.x  | bash -
+RUN apt-get -y install nodejs
+
+RUN mkdir -p /app
+COPY . /app
+
+WORKDIR /app/ui
+RUN npm install
+WORKDIR /app
+RUN sbt dist
+RUN unzip /app/target/universal/sample.zip -d /app/sample
+
+FROM openjdk:11-jre-slim
+RUN mkdir /app
+COPY --from=BUILD /app/sample /app
+EXPOSE 80
+WORKDIR /app/sample
+
+ENTRYPOINT ["/app/sample/bin/sample", "-Dconfig.file=/app/sample/conf/server.conf", "-Dhttp.port=80"]

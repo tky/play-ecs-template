@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+  "outDir": "../public/javascripts/",
+  "noImplicitAny": true,
+  "target": "es5",
+  "module": "es2015",
+  "moduleResolution": "node",
+  "jsx": "react"
+  },
+  "lib": [
+      "es2020",
+      "dom"
+    ],
+  "include": [
+    "./src/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
