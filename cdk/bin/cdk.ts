@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
 import { NetworkStack } from '../lib/network-stack';
+import { EcrStack } from '../lib/ecr-stack';
 
 const app = new cdk.App();
 
@@ -31,4 +32,10 @@ new NetworkStack(app, 'NetworkStack', {
   publicManageSubnets: [
     { cidrBlock: "10.1.240.0/24", name: "public-management-1", availabilityZone: "ap-northeast-2a" },
   ]
+});
+
+
+
+new EcrStack(app, 'EcrStack', {
+  env
 });
