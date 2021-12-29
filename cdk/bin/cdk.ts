@@ -2,12 +2,13 @@
 import * as cdk from 'aws-cdk-lib';
 import { NetworkStack } from '../lib/network-stack';
 import { EcrStack } from '../lib/ecr-stack';
+import { ApplicationStack } from '../lib/application-stack';
 
 const app = new cdk.App();
 
 const env = { account: process.env.AWS_ACCOUNT_ID, region: "ap-northeast-2" }
 
-new NetworkStack(app, 'NetworkStack', {
+const networkStack = new NetworkStack(app, 'NetworkStack', {
   env,
   vpc: {
     cidr: "10.1.0.0/16",
@@ -35,7 +36,15 @@ new NetworkStack(app, 'NetworkStack', {
 });
 
 
-
 new EcrStack(app, 'EcrStack', {
   env
+});
+
+
+new ApplicationStack(app, 'ApplicationStack', {
+  env,
+  vpc: networkStack.vpc,
+  internalSecurityGroup: networkStack.sgInternalLB,
+  containerSubnets: networkStack.privateContainerSubnets,
+  containerSecurityGroup: networkStack.sgBackendContainer,
 });
