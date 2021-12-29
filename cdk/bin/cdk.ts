@@ -4,7 +4,7 @@ import { NetworkStack } from '../lib/network-stack';
 
 const app = new cdk.App();
 
-const env = { account: process.env.AWS_ACCOUNT_ID, region: process.env.AWS_REGION }
+const env = { account: process.env.AWS_ACCOUNT_ID, region: "ap-northeast-2" }
 
 new NetworkStack(app, 'NetworkStack', {
   env,
