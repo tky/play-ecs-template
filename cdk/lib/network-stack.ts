@@ -328,7 +328,7 @@ export class NetworkStack extends Stack {
     new ec2.CfnVPCEndpoint(this, 'application-s3-endpoint', {
       serviceName: 'com.amazonaws.'.concat(props.env!.region || "ap-northeast-1").concat('.s3'),
       vpcId: this.vpc.vpcId,
-      routeTableIds: [egressRouteTable.ref],
+      routeTableIds: [appRouteTable.ref],
       vpcEndpointType: 'Gateway',
     });
   }
