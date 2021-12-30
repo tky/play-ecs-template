@@ -3,6 +3,7 @@ import * as cdk from 'aws-cdk-lib';
 import { NetworkStack } from '../lib/network-stack';
 import { EcrStack } from '../lib/ecr-stack';
 import { ApplicationStack } from '../lib/application-stack';
+import { FrontStack } from '../lib/front-stack';
 
 const app = new cdk.App();
 
@@ -47,4 +48,12 @@ new ApplicationStack(app, 'ApplicationStack', {
   internalSecurityGroup: networkStack.sgInternalLB,
   containerSubnets: networkStack.privateContainerSubnets,
   containerSecurityGroup: networkStack.sgBackendContainer,
+});
+
+new FrontStack(app, 'FrontStack', {
+  env,
+  vpc: networkStack.vpc,
+  ingressSubnets: networkStack.publicIngressSubnets,
+  ingressSecurityGroup: networkStack.sgPublicIngress,
+  fluentbitConfigFile: '/fluent-bit/etc/extra-conf'
 });
