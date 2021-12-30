@@ -31,5 +31,16 @@ export class EcrStack extends Stack {
         }
       ]
     });
+
+    new ecr.Repository(this, 'RepositoryLogRouter', {
+      repositoryName: 'log-router',
+      lifecycleRules: [
+        {
+          rulePriority: 1,
+          description: 'remove old images',
+          maxImageCount: 5
+        }
+      ]
+    });
   }
 }
