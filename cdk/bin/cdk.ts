@@ -55,5 +55,5 @@ new FrontStack(app, 'FrontStack', {
   vpc: networkStack.vpc,
   ingressSubnets: networkStack.publicIngressSubnets,
   ingressSecurityGroup: networkStack.sgPublicIngress,
-  fluentbitConfigFile: '/fluent-bit/etc/extra-conf'
+  fluentbitConfigFile: '/fluent-bit/etc/extra.conf'
 });

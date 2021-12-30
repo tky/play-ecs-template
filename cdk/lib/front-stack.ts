@@ -56,8 +56,8 @@ export class FrontStack extends Stack {
 
     const taskDefinition = new ecs.FargateTaskDefinition(this, "taskDefinition", {
       family: 'front-task',
-      cpu: 256,
-      memoryLimitMiB: 512,
+      cpu: 512,
+      memoryLimitMiB: 1024,
       executionRole: ecsTaskExecutionRole,
       taskRole: ecsTaskExecutionRole
     });
@@ -73,11 +73,9 @@ export class FrontStack extends Stack {
         }
       ],
       essential: true,
-      // logging: ecs.LogDrivers.firelens({})
-      logging: new ecs.AwsLogDriver({ streamPrefix: 'nginx' })
+      logging: ecs.LogDrivers.firelens({})
     });
 
-    /*
     taskDefinition.addFirelensLogRouter('firelensLogRouter', {
       firelensConfig: {
         type: FirelensLogRouterType.FLUENTBIT,
@@ -89,7 +87,6 @@ export class FrontStack extends Stack {
         ecr.Repository.fromRepositoryName(this, 'log-router', 'log-router')),
       logging: new ecs.AwsLogDriver({ streamPrefix: 'firelens' })
     });
-    */
 
     const albSg = new ec2.SecurityGroup(this, "albSg", {
       vpc,
